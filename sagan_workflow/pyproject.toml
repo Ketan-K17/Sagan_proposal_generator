@@ -22,6 +22,8 @@ ipython = "*"
 langchain-groq = "*"
 chromadb = "^0.5.15"
 langchain-chroma = "^0.1.4"
+markdown = "^3.7"
+pdfkit = "^1.0.0"
 
 
 [build-system]
