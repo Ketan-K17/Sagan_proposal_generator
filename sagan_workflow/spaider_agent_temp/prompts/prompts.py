@@ -114,7 +114,7 @@ Instructions:
 2. Section Answers: You will also receive answers or content related to each sub-category. Use these answers as a foundation to expand upon and create a cohesive narrative.
 3. Word Count: Ensure that each sub-category contains at least 300 words. The overall word count of the draft should be between 1500-2000 words.
 4. Cohesion and Flow: Maintain a logical flow between sections and ensure that the draft reads smoothly. Use transitions where necessary to connect ideas.
-5. Formatting: Use appropriate headings and subheadings to organize the content according to the plan structure.
+5. Formatting: Use appropriate headings and subheadings to organize the content according to the plan structure. MAKE SURE TO USE LATEX FORMATTING FOR THE ENTIRE FINAL DRAFT.
 
 Your output should be a well-structured draft that adheres to these guidelines. Begin with the first topic in the plan and proceed sequentially through each sub-category.
 

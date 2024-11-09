@@ -17,6 +17,8 @@ from tools.script_executor import run_script
 from tools.file_tree import get_file_tree
 from tools.web_tool import web_search_tool
 from tools.query_chromadb import query_chromadb
+# from utils.mdtopdf import convert_md_to_pdf
+from utils.latextopdf import latex_to_pdf
 
 load_dotenv()
 init()
@@ -37,6 +39,7 @@ llm = BuildChatOpenAI(model=MODEL, temperature=0)
 llm_with_terminal_tools = llm.bind_tools(terminal_tools)
 llm_with_research_tools = llm.bind_tools(research_tools)
 
+# SCHEMAS FOR THE OUTPUTS OF THE NODES
 class PromptParserOutput(BaseModel):
     """Ensure that this is the output of the prompt_parser node."""
     project_title: str = Field(description="The title of the project.")
@@ -59,7 +62,7 @@ class SectionWiseQuestionGeneratorOutput(BaseModel):
     """Ensure that this is the output of the section_wise_question_generator node."""
     section_questions: dict[str, list[str]] = Field(description="A dictionary of sections and their corresponding list of questions.")
 
-
+# NODES
 terminal_tools_node = ToolNode(terminal_tools)
 research_tools_node = ToolNode(research_tools)
 
@@ -436,9 +439,18 @@ def generation_node(state: State):
     print(f"\n\n\n\nstate at the end of generation_node: \n")
     print("Messages: ")
     messages = state["messages"]
-    output_path = "C:\\Users\\ketan\\Desktop\\SPAIDER-SPACE\\sagan_workflow\\output\\output.md"
+
+    # Save the draft to a markdown file
+    output_path = "C:\\Users\\ketan\\Desktop\\SPAIDER-SPACE\\sagan_workflow\\output\\output.tex"
     with open(output_path, "w", encoding="utf-8") as file:
         file.write(state["draft"])
+
+    # convert the markdown file to pdf
+    # convert_md_to_pdf(output_path, "C:\\Users\\ketan\\Desktop\\SPAIDER-SPACE\\sagan_workflow\\output\\output.pdf")
+
+    # convert the latex file to pdf
+    latex_to_pdf(output_path)
+
     if len(messages) >= 3:
         for message in messages[-3:]:
             print(f"{message.type}: {message.content}")
