@@ -44,7 +44,10 @@ from graph import create_graph, compile_graph, print_stream
 
 
 
-config = RunnableConfig(recursion_limit=50)
+config = RunnableConfig(
+    recursion_limit=50,
+    configurable={"thread_id": "1"}
+)
 print(config)
 
 if __name__ == "__main__":

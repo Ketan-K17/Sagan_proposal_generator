@@ -1,5 +1,7 @@
 from langgraph.graph import StateGraph, END, START
 from langgraph.constants import END
+from langgraph.checkpoint.memory import MemorySaver
+
 from dotenv import load_dotenv
 
 # LOCAL IMPORTS
@@ -71,7 +73,8 @@ def create_graph():
 
 def compile_graph(builder):
     '''COMPILE GRAPH'''
-    graph = builder.compile()
+    checkpointer = MemorySaver()
+    graph = builder.compile(checkpointer=checkpointer)
     return graph
 
 def print_stream(stream):
