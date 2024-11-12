@@ -2,7 +2,7 @@ from langchain_core.runnables.config import RunnableConfig
 # LOCAL IMPORTS.
 from graph import create_graph, compile_graph, print_stream
 from schemas import State
-from prompts.prompts import *
+from prompts.prompts import RESEARCHER_PROMPT
 
 # api handling imports.
 # from fastapi import FastAPI,File, UploadFile
@@ -60,20 +60,31 @@ if __name__ == "__main__":
     builder = create_graph()
     graph = compile_graph(builder)
 
-    # Create a State object with the given section_title and section_text
-    section_title="Context and Motivation"
-    section_text="The University of Luxembourg, through its Research Unit in Engineering Science (RUES), is committed to addressing the socio-economic needs and challenges of society and industry by becoming a leader in education and research in the Greater Region and globally. The unit focuses on three main research areas: Construction and Design, Energy and Environment, and Automation and Mechatronics. These areas encompass research into civil and mechanical engineering structures, energy efficiency, renewable energies, and dynamic testing methods, among others. The university aims to seamlessly integrate research and education to cultivate future leaders and critical thinkers. In collaboration with over 70 private and public organizations through SnT's Partnership Programme, the university addresses key challenges in ICT, contributing to the European Strategic Technology Plan and the Innovation Union in Europe. Since its launch in 2009, the Centre has rapidly developed, launching over 100 EU and ESA projects, protecting and licensing IP, and creating a dynamic interdisciplinary research environment with around 480 people. For all AFR individual applications, a project idea must be outlined using a specific template, detailing the hypothesis, research questions, innovation, expected outcomes, and methodology. The FNR encourages the dissemination of research to the public and media, emphasizing the value and impact of research outputs. This approach ensures that research activities are aligned with industry, policymakers, and societal needs, fostering an innovation-driven research environment."  
+   
 
-    researcher_prompt = RESEARCHER_PROMPT.format(section_title=section_title, section_text=section_text)
+    # # Infinite loop to take user input and print the output stream
+    # while True:
+    #     user_input = input("############# User: ")
+    #     initial_state = {
+    #         "messages": [("system", researcher_prompt), ("user", user_input)],
+    #         "section_title": section_title,
+    #         "section_text": section_text
+    #     }
+    #     print_stream(graph.stream(initial_state, stream_mode="values", config=config))
 
-    # print the mermaid diagram of the graph.
-    print(graph.get_graph().draw_mermaid())
+    while True:
+        if 's_title' not in locals() or 's_text' not in locals():
+            s_title = "Context and Motivation"
+            s_text = "The University of Luxembourg, through its Research Unit in Engineering Science (RUES), is committed to addressing the socio-economic needs and challenges of society and industry by becoming a leader in education and research in the Greater Region and globally. The unit focuses on three main research areas: Construction and Design, Energy and Environment, and Automation and Mechatronics. These areas encompass research into civil and mechanical engineering structures, energy efficiency, renewable energies, and dynamic testing methods, among others. The university aims to seamlessly integrate research and education to cultivate future leaders and critical thinkers. In collaboration with over 70 private and public organizations through SnT's Partnership Programme, the university addresses key challenges in ICT, contributing to the European Strategic Technology Plan and the Innovation Union in Europe. Since its launch in 2009, the Centre has rapidly developed, launching over 100 EU and ESA projects, protecting and licensing IP, and creating a dynamic interdisciplinary research environment with around 480 people. For all AFR individual applications, a project idea must be outlined using a specific template, detailing the hypothesis, research questions, innovation, expected outcomes, and methodology. The FNR encourages the dissemination of research to the public and media, emphasizing the value and impact of research outputs. This approach ensures that research activities are aligned with industry, policymakers, and societal needs, fostering an innovation-driven research environment."
 
-    # taking user input.
-    user_input = input("############# User: ")
+            # Debug: Print the prompt template and values
+            # print("RESEARCHER_PROMPT:", repr(RESEARCHER_PROMPT))
+            # print("section_title:", repr(s_title))
+            # print("section_text:", repr(s_text))
 
-    # initting state with the formatted researcher prompt, and section title and text.
-    initial_state = {"messages": [("system", researcher_prompt), ("user", user_input)], "section_title": section_title, "section_text": section_text}
-
-    # Pass the State object to the graph.stream method
-    print_stream(graph.stream(initial_state, stream_mode="values", config=config))
+            researcher_prompt = RESEARCHER_PROMPT.format(
+                section_title=s_title,
+                section_text=s_text
+            )
+        user_input = input("############# User: ")
+        print_stream(graph.stream({"messages": [("system", researcher_prompt), ("user", user_input)]}, stream_mode="values", config=config))

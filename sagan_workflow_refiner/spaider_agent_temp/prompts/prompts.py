@@ -25,7 +25,7 @@ section text: {section_text}
 >>> Some examples for your reference:
 1. User Prompt: "Research the latest advancements in space propulsion technology and include information about it in the section."
    - Output: 
-     {
+     {{
        "research_queries": [
          "What are the recent breakthroughs in space propulsion technology?",
          "List the latest technologies being developed for space propulsion.",
@@ -33,13 +33,13 @@ section text: {section_text}
          "What are the potential benefits of the latest space propulsion technologies?",
          "Who are the leading researchers or organizations in space propulsion advancements?"
        ]
-     }
+     }}
 
 2. User Prompt: "Try to paraphrase the section text such that it is atleast 800 words long."
    - Output: 
-     {
+     {{
        "research_queries": []
-     }
+     }}
 
 """
 
