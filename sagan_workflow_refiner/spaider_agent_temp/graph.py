@@ -18,27 +18,30 @@ def create_graph():
     builder = StateGraph(State)
 
     # ADD NODES TO THE GRAPH
-    builder.add_node("researcher", researcher)
-    builder.add_node("researcher_toolnode", research_tools_node)  
+    builder.add_node("research_query_generator", research_query_generator)
+    builder.add_node("research_query_answerer", research_query_answerer)
+    builder.add_node("formatter", formatter)
+    builder.add_node("research_tools_node", research_tools_node)  
 
     # ADD EDGES TO THE GRAPH
-    builder.add_edge(START, "researcher")
+    builder.add_edge(START, "research_query_generator")
+    builder.add_edge("research_query_generator", "research_query_answerer")
     builder.add_conditional_edges(
-        "researcher",
-        researcher_tools_condition,
+        "research_query_answerer",
+        research_tools_condition,
         {
-            "researcher_toolnode": "researcher_toolnode",
-            "__end__": END
+            "research_tools_node": "research_tools_node",
+            "formatter": "formatter"
         }
     )
-    builder.add_edge("researcher_toolnode", "researcher")
-
+    builder.add_edge("research_tools_node", "research_query_answerer")
+    builder.add_edge("formatter", END)
     return builder
 
 def compile_graph(builder):
     '''COMPILE GRAPH'''
     checkpointer = MemorySaver()
-    graph = builder.compile(checkpointer=checkpointer)
+    graph = builder.compile(interrupt_after=["formatter"], checkpointer=checkpointer)
     return graph
 
 def print_stream(stream):

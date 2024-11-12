@@ -42,18 +42,23 @@ llm_with_research_tools = llm.bind_tools(research_tools)
 
 research_tools_node = ToolNode(research_tools)
 
-def researcher(state: State) -> State:
+def research_query_generator(state: State) -> State:
     """
-    Given a user prompt, this node queries the vector database if it decides that more information is needed.
+    Given a user prompt, this node determines if research is needed and generates appropriate queries.
     """
-    print(f"{Fore.YELLOW}################ RESEARCHER BEGIN #################")
-    # system_prompt = SystemMessage(RESEARCHER_PROMPT.format(section_text=state["section_text"]))
-    # state["messages"].append(system_prompt)
-
+    print(f"{Fore.YELLOW}################ RESEARCH QUERY GENERATOR BEGIN #################")
+    state["user_prompt"] = state["messages"][1].content
     try:
-        response = llm_with_research_tools.invoke(state["messages"])
-        # print(f"Response content: {response.content}")
-        # print(f"Response type: {type(response)}")
+        # Add the query generator prompt to messages
+        # research_query_generator_prompt = SystemMessage(
+        #     content=RESEARCH_QUERY_GENERATOR_PROMPT.format(
+        #         section_title=state.get("section_title"),
+        #         section_text=state.get("section_text")
+        #     )
+        # )
+        # state["messages"].append(research_query_generator_prompt)
+        
+        response = llm.invoke(state["messages"])
 
         if not response or not hasattr(response, 'content'):
             raise ValueError("Invalid response from LLM.")
@@ -62,12 +67,15 @@ def researcher(state: State) -> State:
         response_content = json.loads(response.content)
         research_queries = response_content.get('research_queries', [])
 
-        print(f"Response content: {response.content}")
-        print(f"Research Queries: {research_queries}")
-
+        # do we need to query the db?
+        research_needed = len(research_queries) > 0
+        state["research_needed"] = research_needed
         state["research_queries"] = research_queries
 
-        print(f"\n\n\n\nstate at the end of researcher: \n")
+        if not research_needed:
+            print("\n\nNo research needed.\n\n")
+
+        print(f"\n\n\n\nstate at the end of research query generator: \n")
         ## printing messages
         print("Messages: ")
         messages = state["messages"]
@@ -81,23 +89,124 @@ def researcher(state: State) -> State:
         ## printing fields other than messages.
         for field_name, field_value in state.items():
             if field_name != "messages":
-                print(f"- {field_name}: {field_value}")
-        print(f"################ RESEARCHER END #################{Style.RESET_ALL}")
+                print(f"- {field_name.capitalize()}: {field_value}")
+        print(f"################ RESEARCH QUERY GENERATOR END #################{Style.RESET_ALL}")
         return state
 
     except Exception as e:
         print(f"Error occurred: {e}")
-        print(f"################ RESEARCHER END #################{Style.RESET_ALL}")
+        print(f"################ RESEARCH QUERY GENERATOR END #################{Style.RESET_ALL}")
         state["messages"] = [str(e)]
         state["section_title"] = None
         state["section_text"] = None
         state["rough_draft"] = None
         state["research_queries"] = None
+        state["context"] = None
         return state
 
+def research_query_answerer(state: State) -> State:
+    """
+    Takes the generated queries and executes them against the vector database.
+    Only runs if research_needed is True.
+    """
+    print(f"{Fore.YELLOW}################ RESEARCH QUERY ANSWERER BEGIN #################")
 
+    try:
+        if not state.get("research_needed"):
+            state["context"] = []
+            return state
 
+        # Add the query answerer prompt to messages
+        research_query_answerer_prompt = SystemMessage(
+            content=RESEARCH_QUERY_ANSWERER_PROMPT.format(
+                section_title=state.get("section_title"),
+                section_text=state.get("section_text"),
+                research_queries=state.get("research_queries")
+            )
+        )
+        state["messages"].append(research_query_answerer_prompt)
 
+        context = []
+        for query in state["research_queries"]:
+            result = query_chromadb(
+                "C:\\Users\\ketan\\Desktop\\SPAIDER-SPACE\\sagan_workflow\\ingest_data\\mychroma_db",
+                "sentence-transformers/all-MiniLM-L6-v2",
+                query
+            )
+            context.extend(result)
 
+        state["context"] = context
 
+        print(f"\n\n\n\nstate at the end of query answerer: \n")
+        ## printing messages
+        print("Messages: ")
+        messages = state["messages"]
+        if len(messages) >= 3:
+            for message in messages[-3:]:
+                print(f"{message.type}: {message.content}")
+        else:
+            for message in messages:
+                print(f"{message.type}: {message.content}")
 
+        ## printing fields other than messages.
+        for field_name, field_value in state.items():
+            if field_name != "messages":
+                print(f"- {field_name.capitalize()}: {field_value}")
+        print(f"################ QUERY ANSWERER END #################{Style.RESET_ALL}")
+        return state
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        print(f"################ QUERY ANSWERER END #################{Style.RESET_ALL}")
+        state["messages"] = [str(e)]
+        state["section_title"] = None
+        state["section_text"] = None
+        state["rough_draft"] = None
+        state["research_queries"] = None
+        state["context"] = None
+        return state
+
+def formatter(state: State):
+    print(f"{Fore.LIGHTGREEN_EX}################ FORMATTING NODE BEGIN #################")
+
+    # Ensure state values are not None
+    user_prompt = state.get("user_prompt", "")
+    section_text = state.get("section_text", "")
+    context = state.get("context", "")
+
+    # populating the agent prompt
+    formatter_prompt = FORMATTER_PROMPT.format(
+        user_prompt=user_prompt,
+        section_text=section_text,
+        context=context
+    )
+
+    # appending the formatter prompt to list of messages
+    state["messages"].append(SystemMessage(content=formatter_prompt))
+    
+    # invoking the llm, response in json.
+    response = llm.invoke(state["messages"])
+    print(f"RESPONSE: {response.content}")
+
+    # Parse the response content directly, removing any potential JSON code block markers
+    content = response.content
+    if content.startswith('```json'):
+        content = content[7:]  # Remove ```json
+    if content.endswith('```'):
+        content = content[:-3]  # Remove closing ```
+    
+    response_json = json.loads(content.strip())
+    state["modified_section_text"] = response_json.get('modified_section_text')
+
+    messages = state["messages"]
+    if len(messages) >= 3:
+        for message in messages[-3:]:
+            print(f"{message.type}: {message.content}")
+    else:
+        for message in messages:
+            print(f"{message.type}: {message.content}")
+    for field_name, field_value in state.items():
+        if field_name != "messages":
+            print(f"- {field_name.capitalize()}: {field_value}")
+    print(f"################ FORMATTING NODE END #################{Style.RESET_ALL}")
+    return state

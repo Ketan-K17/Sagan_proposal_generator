@@ -5,12 +5,12 @@ from pydantic import BaseModel
 
 
 # Tools_condition that sets the logic of the conditional edge from FS_manager to reporter or the tools node.
-def researcher_tools_condition(
+def research_tools_condition(
     state: Union[list[AnyMessage], dict[str, Any], BaseModel],
-) -> Literal["researcher_toolnode", "__end__"]:
-    """Use in the conditional_edge to route to the researcher_toolnode if the last message
+) -> Literal["research_tools_node", "formatter"]:
+    """Use in the conditional_edge to route to the research_tools_node if the last message
 
-    has tool calls. Otherwise, route to the __end__ node.
+    has tool calls. Otherwise, route to the formatter node.
 
     Args:
         state (Union[list[AnyMessage], dict[str, Any], BaseModel]): The state to check for
@@ -29,6 +29,6 @@ def researcher_tools_condition(
     else:
         raise ValueError(f"No messages found in input state to tool_edge: {state}")
     if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
-        return "researcher_toolnode"
-    return "__end__"
+        return "research_tools_node"
+    return "formatter"
 
