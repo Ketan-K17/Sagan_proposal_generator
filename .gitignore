@@ -4,6 +4,8 @@ mgmt_template_db
 template_db
 .env
 What_to_finish_on_9th_nov
+output/
+test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

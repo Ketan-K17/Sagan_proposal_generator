@@ -116,7 +116,7 @@ Instructions:
 4. Cohesion and Flow: Maintain a logical flow between sections and ensure that the draft reads smoothly. Use transitions where necessary to connect ideas.
 5. Formatting: Use appropriate headings and subheadings to organize the content according to the plan structure. MAKE SURE TO USE LATEX FORMATTING FOR THE ENTIRE FINAL DRAFT.
 
-Your output should be a well-structured draft that adheres to these guidelines. Begin with the first topic in the plan and proceed sequentially through each sub-category.
+Your output should be a well-structured draft in LaTeX format that adheres to these guidelines. Begin with the first topic in the plan and proceed sequentially through each sub-category. Also, MAKE SURE to use an accompanying ai message that relays to the user that the draft is ready. For ease of extraction of the said message, use the tags - <START_OF_AI_MESSAGE> and <END_OF_AI_MESSAGE>, to signal the beginning and end of the ai message.
 
 The plan and section answers have been provided in the following message:
  """

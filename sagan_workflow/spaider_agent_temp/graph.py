@@ -45,7 +45,7 @@ def create_graph():
         }
     )
     builder.add_edge("aag_toolnode", "abstract_answers_generator")
-
+    
     builder.add_conditional_edges(
         "section_topic_extractor",
         ste_tools_condition,

@@ -6,47 +6,37 @@ from graph import create_graph, compile_graph, print_stream
 from schemas import State
 from prompts.prompts import RESEARCH_QUERY_GENERATOR_PROMPT
 
-# api handling imports.
-# from fastapi import FastAPI,File, UploadFile
-# from fastapi.responses import JSONResponse
-# from fastapi.middleware.cors import CORSMiddleware
-# import os
-# from pathlib import Path
-# from pypdf import PdfReader
 
-
-# app = FastAPI()
-
-# DATA_FOLDER = Path("testfolder")
-# DATA_FOLDER.mkdir(exist_ok=True)
-
-# @app.post("/upload")
-# async def upload_file(file: UploadFile = File(...)):
-#     if file.content_type != "application/pdf":
-#         return JSONResponse(status_code=400, content={"message": "Invalid file type. Please upload a PDF."})
-
-#     file_location = DATA_FOLDER / file.filename
-#     with open(file_location, "wb") as f:
-#         f.write(await file.read())
-
-#     # Validate the PDF and read all pages
-#     try:
-#         with open(file_location, "rb") as pdf_file:
-#             reader = PdfReader(pdf_file)
-#             # Iterate through all pages to ensure the PDF is fully readable
-#             for page_num, page in enumerate(reader.pages):
-#                 text = page.extract_text()
-#                 print(f"Text from page {page_num + 1}: {text}")
-#     except Exception as e:
-#         # Delete the file if it's not a valid PDF
-#         os.remove(file_location)
-#         return JSONResponse(status_code=400, content={"message": "The file is not a valid PDF."})
-
-#     return JSONResponse(content={"message": "File uploaded and verified successfully!"})
-
-
-
-
+def extract_section(draft_path: str, section_number: int) -> tuple[str, str]:
+    """
+    Extract section title and text from a markdown file based on section number.
+    Returns a tuple of (section_title, section_text).
+    """
+    with open(draft_path, 'r', encoding='utf-8') as file:
+        content = file.read()
+    
+    # Remove any content before the first section
+    if '# ' in content:
+        content = content[content.find('# '):]
+    
+    # Split the content into sections based on level 1 headers
+    sections = content.split('\n# ')
+    if sections[0].startswith('# '):  # Handle first section if it starts with #
+        sections[0] = sections[0][2:]
+    
+    # Ensure section number is valid
+    if section_number < 1 or section_number > len(sections):
+        raise ValueError(f"Section number {section_number} is out of range. File has {len(sections)} sections.")
+    
+    # Get the requested section
+    section = sections[section_number - 1]
+    
+    # Split into title and content, handling subsections
+    section_parts = section.split('\n', 1)
+    section_title = section_parts[0].split(':', 1)[1].strip() if ':' in section_parts[0] else section_parts[0].strip()
+    section_text = section_parts[1].strip() if len(section_parts) > 1 else ""
+    
+    return section_title, section_text
 
 config = RunnableConfig(
     recursion_limit=50,
@@ -62,36 +52,14 @@ if __name__ == "__main__":
     builder = create_graph()
     graph = compile_graph(builder)
 
-   
 
-    # # Infinite loop to take user input and print the output stream
-    # while True:
-    #     user_input = input("############# User: ")
-    #     initial_state = {
-    #         "messages": [("system", researcher_prompt), ("user", user_input)],
-    #         "section_title": section_title,
-    #         "section_text": section_text
-    #     }
-    #     print_stream(graph.stream(initial_state, stream_mode="values", config=config))
-
-
-    
-    if 's_title' not in locals() or 's_text' not in locals():
-        s_title = "Context and Motivation"
-        s_text = "The University of Luxembourg, through its Research Unit in Engineering Science (RUES), is committed to addressing the socio-economic needs and challenges of society and industry by becoming a leader in education and research in the Greater Region and globally. The unit focuses on three main research areas: Construction and Design, Energy and Environment, and Automation and Mechatronics. These areas encompass research into civil and mechanical engineering structures, energy efficiency, renewable energies, and dynamic testing methods, among others. The university aims to seamlessly integrate research and education to cultivate future leaders and critical thinkers. In collaboration with over 70 private and public organizations through SnT's Partnership Programme, the university addresses key challenges in ICT, contributing to the European Strategic Technology Plan and the Innovation Union in Europe. Since its launch in 2009, the Centre has rapidly developed, launching over 100 EU and ESA projects, protecting and licensing IP, and creating a dynamic interdisciplinary research environment with around 480 people. For all AFR individual applications, a project idea must be outlined using a specific template, detailing the hypothesis, research questions, innovation, expected outcomes, and methodology. The FNR encourages the dissemination of research to the public and media, emphasizing the value and impact of research outputs. This approach ensures that research activities are aligned with industry, policymakers, and societal needs, fostering an innovation-driven research environment."
-
-        # Debug: Print the prompt template and values
-        # print("RESEARCHER_PROMPT:", repr(RESEARCHER_PROMPT))
-        # print("section_title:", repr(s_title))
-        # print("section_text:", repr(s_text))
+    draft_path = "../input_draft/draft.md"
+    section_number = 3
+        
+    s_title, s_text = extract_section(draft_path, section_number)
 
     # printing the graph.
     print(graph.get_graph().draw_mermaid())
-
-    # print("#########################")
-    # print(f"Section title\n{s_title}")
-    # print(f"Section text\n{s_text}")
-    # print("#########################")
 
     research_query_generator_prompt = RESEARCH_QUERY_GENERATOR_PROMPT.format(
         section_title=s_title,
@@ -103,6 +71,8 @@ if __name__ == "__main__":
         "messages": [SystemMessage(content=research_query_generator_prompt), HumanMessage(content=user_input)],
         "section_text": s_text,
         "section_title": s_title,
+        "section_number": section_number,
+        "rough_draft_path": draft_path
     }
 
     print_stream(graph.stream(initial_input, stream_mode="values", config=config))
@@ -115,3 +85,10 @@ if __name__ == "__main__":
             
     else:
         print("Changes not saved.")
+
+# Use the function to get section title and text
+try:
+    s_title, s_text = extract_section(draft_path, section_number)
+except Exception as e:
+    print(f"Error extracting section: {e}")
+    s_title, s_text = "", ""

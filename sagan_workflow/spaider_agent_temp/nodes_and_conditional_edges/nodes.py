@@ -431,6 +431,7 @@ def generation_node(state: State):
         user_message
         ]
     response = llm.invoke(messages)
+    print(f"\n\n\n\nResponse: \n{response.content}")
     # print(f"\n\n\n\nDraft: {response.content}")
 
     # Updating state before end-of-node logging
@@ -444,6 +445,10 @@ def generation_node(state: State):
     output_path = "C:\\Users\\ketan\\Desktop\\SPAIDER-SPACE\\sagan_workflow\\output\\output.tex"
     with open(output_path, "w", encoding="utf-8") as file:
         file.write(state["draft"])
+
+    messages_output_path = "C:\\Users\\ketan\\Desktop\\SPAIDER-SPACE\\sagan_workflow\\output\\messages.txt"
+    with open(messages_output_path, "w", encoding="utf-8") as file:
+        file.write(str(state["messages"]))
 
     # convert the markdown file to pdf
     # convert_md_to_pdf(output_path, "C:\\Users\\ketan\\Desktop\\SPAIDER-SPACE\\sagan_workflow\\output\\output.pdf")

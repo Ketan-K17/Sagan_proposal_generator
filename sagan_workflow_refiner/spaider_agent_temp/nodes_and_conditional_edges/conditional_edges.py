@@ -1,6 +1,7 @@
 from typing import Union, Literal, Any
 from langchain_core.messages import SystemMessage, AnyMessage
 from pydantic import BaseModel
+from schemas import State
 # from langgraph.prebuilt import tools_condition
 
 
@@ -32,3 +33,6 @@ def research_tools_condition(
         return "research_tools_node"
     return "formatter"
 
+
+def routing_function(state: State):
+    return state["user_approval"]

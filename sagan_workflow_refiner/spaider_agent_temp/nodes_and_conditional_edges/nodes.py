@@ -67,6 +67,34 @@ def research_query_generator(state: State) -> State:
         response_content = json.loads(response.content)
         research_queries = response_content.get('research_queries', [])
 
+        # Show the list of queries to the user
+        print("Generated Research Queries:")
+        for i, query in enumerate(research_queries, start=1):
+            print(f"{i}. {query}")
+
+        # Allow user to modify the list of queries
+        user_input = input("Would you like to modify or add queries? (yes/no): ").strip().lower()
+        if user_input == 'yes':
+            modified_queries = []
+            # First, handle existing queries
+            for i, query in enumerate(research_queries, start=1):
+                new_query = input(f"Modify query {i} (or press Enter to keep it unchanged): ").strip()
+                if new_query:
+                    modified_queries.append(new_query)
+                else:
+                    modified_queries.append(query)
+            
+            # Allow adding new queries
+            while True:
+                add_more = input("\nWould you like to add a new query? (yes/no): ").strip().lower()
+                if add_more != 'yes':
+                    break
+                new_query = input(f"Enter new query {len(modified_queries) + 1}: ").strip()
+                if new_query:
+                    modified_queries.append(new_query)
+            
+            research_queries = modified_queries
+
         # do we need to query the db?
         research_needed = len(research_queries) > 0
         state["research_needed"] = research_needed
@@ -109,7 +137,7 @@ def research_query_answerer(state: State) -> State:
     Takes the generated queries and executes them against the vector database.
     Only runs if research_needed is True.
     """
-    print(f"{Fore.YELLOW}################ RESEARCH QUERY ANSWERER BEGIN #################")
+    print(f"{Fore.BLUE}################ RESEARCH QUERY ANSWERER BEGIN #################")
 
     try:
         if not state.get("research_needed"):
@@ -210,3 +238,58 @@ def formatter(state: State):
             print(f"- {field_name.capitalize()}: {field_value}")
     print(f"################ FORMATTING NODE END #################{Style.RESET_ALL}")
     return state
+
+def human_input_node(state: State):
+    print(f"{Fore.LIGHTMAGENTA_EX}################ HUMAN INPUT NODE BEGIN #################")
+    response = input("Saves Changes to the section text? (yes/no): ")
+    state["user_approval"] = response
+    print(f"################ HUMAN INPUT NODE END #################{Style.RESET_ALL}")
+    return state
+
+def save_changes(state: State):
+    print(f"{Fore.CYAN}################ SAVING CHANGES NODE BEGIN #################")
+    try:
+        # Read the entire file
+        with open(state["rough_draft_path"], 'r', encoding='utf-8') as file:
+            content = file.read()
+        
+        # Remove any content before the first section
+        if '# ' in content:
+            main_content = content[content.find('# '):]
+            prefix = content[:content.find('# ')]
+        else:
+            main_content = content
+            prefix = ""
+        
+        # Split into sections
+        sections = main_content.split('\n# ')
+        if sections[0].startswith('# '):
+            sections[0] = sections[0][2:]
+        
+        # Get the section number and validate it
+        section_number = state["section_number"]
+        if section_number < 1 or section_number > len(sections):
+            raise ValueError(f"Section number {section_number} is out of range. File has {len(sections)} sections.")
+        
+        # Extract the title from the original section
+        section = sections[section_number - 1]
+        section_title = section.split('\n', 1)[0]
+        
+        # Create the new section with original title and modified text
+        sections[section_number - 1] = f"{section_title}\n{state['modified_section_text']}"
+        
+        # Reconstruct the document
+        new_content = prefix + '# ' + '\n# '.join(sections)
+        
+        # Write back to file
+        with open(state["rough_draft_path"], 'w', encoding='utf-8') as file:
+            file.write(new_content)
+            
+        print("Changes saved successfully!")
+        
+    except Exception as e:
+        print(f"Error saving changes: {e}")
+        
+    print(f"################ SAVING CHANGES NODE END #################{Style.RESET_ALL}")
+    return state
+
