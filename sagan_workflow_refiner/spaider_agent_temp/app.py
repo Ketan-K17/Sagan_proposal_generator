@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
 
     draft_path = "../input_draft/draft.md"
-    section_number = 3
+    section_number = 1
         
     s_title, s_text = extract_section(draft_path, section_number)
 

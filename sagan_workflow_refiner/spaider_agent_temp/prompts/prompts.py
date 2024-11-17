@@ -79,7 +79,7 @@ Context information is below.
 1. Use the user prompt's instructions and the given context to modify the section text. MAKE SURE TO NOT INVENT YOUR OWN DETAILS.
 2. The size of the newly generated section text should be proportional to the size of the context information provided.
 
-Output Format: Your output must be a valid JSON object, with key value as 'modified_section_text' and the value being the modified text.
+Output Format: Your output must be a valid JSON object, with key value as 'modified_section_text' and the value being the modified text. Also, MAKE SURE to include an accompanying ai message that relays to the user that the section_text has been modified and can be viewed on the pdf. For ease of extraction of the said message, use the tags - <START_OF_AI_MESSAGE> and <END_OF_AI_MESSAGE>, to signal the beginning and end of the ai message.
 
 user prompt: {user_prompt}
 

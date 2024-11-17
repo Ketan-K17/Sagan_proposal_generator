@@ -6,6 +6,7 @@ template_db
 What_to_finish_on_9th_nov
 output/
 test.py
+message_output.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
